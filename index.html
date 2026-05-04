@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>서울 전시/박물관 예약도우미</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --highlight: #e74c3c;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            margin: 0;
+            background-color: var(--bg);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* 헤더 스타일 */
+        header {
+            background: linear-gradient(135deg, var(--primary), #4a69bd);
+            color: var(--white);
+            padding: 50px 0;
+            text-align: center;
+            border-bottom: 6px solid var(--accent);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.8rem;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 그래픽 지도 섹션 */
+        .map-container {
+            background: var(--white);
+            margin: -40px auto 40px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .map-container h2 {
+            margin-bottom: 25px;
+            color: var(--primary);
+        }
+
+        .seoul-map-svg {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+        }
+
+        .location-dot {
+            cursor: pointer;
+            transition: r 0.3s, fill 0.3s;
+        }
+
+        .location-dot:hover {
+            fill: var(--highlight);
+            r: 12;
+        }
+
+        .map-label {
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+        }
+
+        /* 종합 안내 표 */
+        .table-section {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid var(--primary);
+            padding: 15px;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-must { background: #ffebee; color: #c62828; }
+        .status-free { background: #e8f5e9; color: #2e7d32; }
+
+        /* 카드 그리드 */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            border-top: 5px solid var(--accent);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .card:hover { transform: translateY(-5px); }
+        .card h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .card ul { padding-left: 20px; margin: 15px 0; }
+        .card li { margin-bottom: 8px; font-size: 0.9rem; }
+
+        .btn-reservation {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+
+        .btn-reservation:hover { background: var(--accent); }
+
+        footer {
+            text-align: center;
+            padding: 50px 0;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 2rem; }
+            .map-container { margin-top: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>서울 전시/박물관 예약도우미</h1>
+        <p>전시 일정부터 얼리버드 티켓, 예약 팁까지 한눈에 확인하세요</p>
+    </div>
+</header>
+
+<div class="container">
+    <!-- 그래픽 지도 섹션 -->
+    <section class="map-container">
+        <h2>📍 전시/박물관 위치 지도</h2>
+        <svg class="seoul-map-svg" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+            <!-- 단순화된 서울 배경 -->
+            <path d="M150,100 Q250,50 350,100 T450,200 Q400,350 250,380 T50,200 Z" fill="#ebf2f7" stroke="#d1dce5" stroke-width="2"/>
+            <path d="M50,220 Q250,200 450,220" fill="none" stroke="#add8e6" stroke-width="8" opacity="0.5"/> <!-- 한강 -->
+            
+            <!-- 포인트들 -->
+            <!-- 종로/성북 구역 -->
+            <circle class="location-dot" cx="240" cy="110" r="8" fill="#3498db"/> <!-- 국현미 -->
+            <text x="245" y="100" class="map-label">국현미/세종</text>
+            
+            <circle class="location-dot" cx="230" cy="70" r="8" fill="#e67e22"/> <!-- 간송/환기 -->
+            <text x="160" y="65" class="map-label">간송/환기</text>
+
+            <!-- 용산 구역 -->
+            <circle class="location-dot" cx="250" cy="230" r="8" fill="#2ecc71"/> <!-- 국중박/전쟁 -->
+            <text x="170" y="245" class="map-label">국중박/리움/전쟁</text>
+
+            <!-- 서초 구역 -->
+            <circle class="location-dot" cx="280" cy="320" r="8" fill="#9b59b6"/> <!-- 예술의전당 -->
+            <text x="290" y="335" class="map-label">예술의전당</text>
+        </svg>
+        <p style="font-size: 0.8rem; color: #888;">*위 지도는 위치 이해를 돕기 위한 간략한 도식입니다.</p>
+    </section>
+
+    <!-- 종합 안내 표 -->
+    <section class="table-section">
+        <table>
+            <thead>
+                <tr>
+                    <th>장소</th>
+                    <th>주요 교통편</th>
+                    <th>운영 시간</th>
+                    <th>관람 시간</th>
+                    <th>최저 가격</th>
+                    <th>예약 필요도</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>리움미술관</strong></td>
+                    <td>한강진역 1번</td>
+                    <td>10:00 - 18:00</td>
+                    <td>약 2시간</td>
+                    <td>무료(상설)</td>
+                    <td><span class="status-badge status-must">필수(2주전)</span></td>
+                </tr>
+                <tr>
+                    <td><strong>국립중앙박물관</strong></td>
+                    <td>이촌역 2번</td>
+                    <td>10:00 - 18:00</td>
+                    <td>약 3시간</td>
+                    <td>무료(상설)</td>
+                    <td><span class="status-badge status-free">권장(기획전)</span></td>
+                </tr>
+                <tr>
+                    <td><strong>국립현대미술관</strong></td>
+                    <td>안국역 1번</td>
+                    <td>10:00 - 18:00</td>
+                    <td>약 2시간</td>
+                    <td>5,000원</td>
+                    <td><span class="status-badge status-free">현장가능</span></td>
+                </tr>
+                <tr>
+                    <td><strong>예술의전당</strong></td>
+                    <td>남부터미널 5번</td>
+                    <td>10:00 - 19:00</td>
+                    <td>약 1.5시간</td>
+                    <td>전시별 상이</td>
+                    <td><span class="status-badge status-free">예약 권장</span></td>
+                </tr>
+                <tr>
+                    <td><strong>환기미술관</strong></td>
+                    <td>경복궁역+버스</td>
+                    <td>10:00 - 18:00</td>
+                    <td>약 1.5시간</td>
+                    <td>15,000원</td>
+                    <td><span class="status-badge status-free">현장가능</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 상세 카드 가이드 -->
+    <div class="details-grid">
+        <div class="card">
+            <h3>🏛️ 리움미술관</h3>
+            <ul>
+                <li><strong>현재 전시:</strong> 아니카 이: 또 다른 진화</li>
+                <li><strong>예약 꿀팁:</strong> 매일 오후 6시에 2주 뒤 티켓 오픈!</li>
+                <li><strong>얼리버드:</strong> 기획전 개막 전 공식 홈페이지 공지</li>
+            </ul>
+            <a href="#" class="btn-reservation">공식 예약처 바로가기</a>
+        </div>
+
+        <div class="card">
+            <h3>🎨 국립현대미술관(서울)</h3>
+            <ul>
+                <li><strong>현재 전시:</strong> MMCA 현대차 시리즈 2024</li>
+                <li><strong>무료 혜택:</strong> 수/토 야간개장(18:00~21:00) 무료</li>
+                <li><strong>예약:</strong> 홈페이지 예약 시 대기 없이 입장 가능</li>
+            </ul>
+            <a href="#" class="btn-reservation">예약 페이지 이동</a>
+        </div>
+
+        <div class="card">
+            <h3>🎻 예술의 전당</h3>
+            <ul>
+                <li><strong>현재 전시:</strong> 에드바르 뭉크 / 베르나르 뷔페</li>
+                <li><strong>얼리버드:</strong> 인터파크/네이버 50% 할인 자주 진행</li>
+                <li><strong>교통:</strong> 주말 주차 혼잡, 대중교통 강력 권장</li>
+            </ul>
+            <a href="#" class="btn-reservation">얼리버드 티켓 확인</a>
+        </div>
+
+        <div class="card">
+            <h3>🖌️ 간송미술관 (본관)</h3>
+            <ul>
+                <li><strong>운영 특징:</strong> 보수 공사 후 시즌제 개방</li>
+                <li><strong>확인사항:</strong> 현재 전시 여부를 반드시 인스타그램 확인</li>
+                <li><strong>분위기:</strong> 한국 전통 미학의 정수를 느낄 수 있음</li>
+            </ul>
+            <a href="#" class="btn-reservation">인스타그램 확인</a>
+        </div>
+    </div>
+
+    <section style="background: #34495e; color: white; padding: 30px; border-radius: 20px;">
+        <h2 style="margin-top: 0;">💡 실패 없는 예약 도우미 Tip</h2>
+        <p>1. <strong>리움미술관</strong>은 회원가입을 미리 하고 로그인 상태에서 18시 정각을 노리세요.</p>
+        <p>2. <strong>국립중앙박물관</strong> 특별전은 네이버 예약이 가장 빠르고 편리합니다.</p>
+        <p>3. <strong>얼리버드 티켓</strong>은 보통 전시 시작 한 달 전 '29CM'나 '티켓링크'에 가장 먼저 뜹니다.</p>
+    </section>
+</div>
+
+<footer>
+    <p>© 2024 서울 전시/박물관 예약도우미. 모든 정보는 실시간으로 변경될 수 있습니다.</p>
+</footer>
+
+</body>
+</html>
